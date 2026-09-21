@@ -1,0 +1,9 @@
+[package]
+name = "demo"     # 包名, 一般与目录一致, 也可以另外的名字
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ecls = { path = "../ecls" }
+ctrlc = "3.4"
+tokio = { version = "1.36", features = ["full"] }

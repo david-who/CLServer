@@ -1,0 +1,12 @@
+[workspace]
+ resolver = "2"
+ members  = ["packages/*"]
+ default-members = ["packages/demo"]
+
+[workspace.package]
+ #name = "ECLS"      # NOT inherited by members!
+ version = "0.1.0"
+ edition = "2024"
+
+[workspace.dependencies]
+ 

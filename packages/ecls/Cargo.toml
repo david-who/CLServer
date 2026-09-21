@@ -1,0 +1,15 @@
+[package]
+name = "ecls"     # 包名, 一般与目录一致, 也可以另外的名字, 如 ECLS
+version.workspace = true
+edition.workspace = true
+description = "A user friendly crate that allows you to utilize ECLS."
+
+[lib]
+name = "ecls"
+path = "src/lib.rs"
+
+[dependencies]
+libc = "*"
+ctrlc = "*"
+chrono = "*"
+tokio = { version = "1.36", features = ["full"] }
