@@ -60,7 +60,7 @@ async fn main() -> std::io::Result<()> {
     ///////////////////////////////////////////////////////////////////////////////
 
     let mut server = Server::new(DEFAULT_SERVER_IPENDPOINT,
-        "192.168.3.138:8080", 1);
+        "192.168.3.116:8080", 1);
     
     let handle = tokio::spawn(async move {
         server.start_udp_server(Duration::from_millis(1000), recv, send).await;

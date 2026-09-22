@@ -1,0 +1,68 @@
+// See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+
+  {
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cargo",
+			"command": "build",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build",
+			"label": "rust: cargo build"
+		},
+		{
+			"type": "cargo",
+			"command": "build",
+			"args": [
+				"--lib",
+				"--package=ecls"
+			],
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build",
+			"label": "rust: lib build"
+		},
+		{
+			"type": "cargo",
+			"command": "clean",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build",
+			"label": "rust: cargo clean"
+		},
+		{
+			"type": "cargo",
+			"command": "run",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"label": "rust: cargo run"
+		},
+		{
+			"type": "cargo",
+			"command": "run",
+			"args": [
+				"--bin=ecls",
+				"--package=ecls"
+			],
+			"problemMatcher": [
+				"$rustc"
+			],
+			"label": "rust: cargo run ecls"
+		},
+		{
+			"type": "cargo",
+			"command": "test",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "test",
+			"label": "rust: cargo test"
+		}
+	]
+}

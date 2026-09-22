@@ -62,8 +62,18 @@ an environment variable, then to a sensible default:
    cargo new packages/cls-server --vcs none    # 不生成版本控制文件
    cargo new packages/cls-client --vcs none    # 不生成版本控制文件
    ```
+6. 重置 git
+   ```bash
+   cd CLServer
+   rm -rf .git    # 删除 git 配置
+   git init       # 初始化 git
+   git status
+   ```
+然后在 vscode: source control -> remote -> add remote
+      vscode: source control -> commit -> commit
+      vscode: source control -> push,pull -> sync 
 
-目录结构如下：
+7. 目录结构
 
 ```cmd
 CLServer [workspace]
@@ -136,8 +146,8 @@ cargo run -p tcp-server
 cargo run -p cls-server
 
 # Terminal 2 & 3 — connect two clients
-nc 127.0.0.1 9000
-nc 127.0.0.1 9000
+nc 127.0.0.1 8080
+nc 127.0.0.1 8080
 ```
 
 Type a line in one client; it is relayed (prefixed with `[#id]`) to **both** clients. Messages from either peer appear in both, so it can be used as a quick chat/relay channel.
@@ -149,7 +159,7 @@ Type a line in one client; it is relayed (prefixed with `[#id]`) to **both** cli
 echo "ping" | cargo run -p cls-client
 
 # Interactive: keep stdin open to keep sending and see replies
-cargo run -p cls-client 10.0.0.5:5000
+cargo run -p cls-client 10.0.0.5:8080
 ```
 
 ## Notes

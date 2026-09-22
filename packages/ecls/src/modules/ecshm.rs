@@ -7,6 +7,140 @@ use std::sync::atomic::{AtomicBool, AtomicU8};
 use libc::{c_void, c_char, c_uint, off_t};
 use libc::{O_CREAT, O_RDWR, O_RDONLY, S_IRUSR, S_IWUSR, PROT_READ, PROT_WRITE, MAP_FAILED, MAP_SHARED};
 
+///
+/// UDP 软件协议: JD-61101
+///   本地 IP: 192.168.118.1:16000
+///   远程 IP: 192.168.118.5:16000
+/// CLS-TO-HOST: 上电初始化切换到力模式
+///   DATA0: 0xA5, 帧头, 固定内容
+///   DATA1: 0xA5, 帧头, 固定内容
+///   DATA2: 0xA5, 帧头, 固定内容
+///   DATA3: 0x01, 设备编号 
+///   DATA4: 0x0E, 数据长度 (14): DATA5~DATA18
+///★  DATA5: 0xXX, 0: 正常, 其他为故障码（详见乙方故障码对照表）
+///   DATA6: 0x00, 预留数据位
+///★  DATA7~DATA10, 脚蹬位移变化值: INT32[-18000,18000], 高位在前, 低位在后; 左脚向前负，右脚向前正 
+///   DATA11~DATA18: 0x00, 预留数据位
+///   DATA19: 和校验, 校验和 SUM[data3:data18]
+/// 
+/// 故障码对照表:
+///   BIT0: 驱动器故障; BIT1: 触发急停; BIT2: 位置超限; BIT3: 力超限
+///   BIT4: 速度超限
+/// 
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct BT_CLS_TO_HOST_T {
+    data: [u8;20],
+}
+
+impl Default for BT_CLS_TO_HOST_T {
+    fn default() -> Self {
+        let mut d = Self {
+            data: [0;20]
+        };
+        d.data[0] = 0xA5;
+        d.data[1] = 0xA5;
+        d.data[2] = 0xA5;
+        d.data[3] = 0x01;
+        d.data[4] = 0x0E;
+
+        d
+    }
+}
+
+impl BT_CLS_TO_HOST_T {
+    pub fn new() -> Self {
+        BT_CLS_TO_HOST_T::default()
+    }
+
+    pub fn get_pos(&self) -> i32 {
+        let mut bytes = [0u8; 4];
+        // Copy buffer into the bytes
+        bytes.copy_from_slice(&self.data[7..11]);
+        // Convert bytes (native endian) to i32
+        i32::from_ne_bytes(bytes)
+    }
+    pub fn set_pos(&mut self, v: i32) {
+        // Convert i32 to bytes (native endian)
+        let bytes = v.to_ne_bytes();
+        // Copy bytes into the buffer
+        self.data[7..11].copy_from_slice(&bytes);
+    }
+
+    pub fn get_sum(&self) -> i32 {
+        (self.data[19] as u32) as i32
+    }
+    pub fn set_sum(&mut self, v: i32) {
+        self.data[19] = v as u8
+    }
+}
+
+///
+/// UDP 软件协议: JD-61101
+///   本地 IP: 192.168.118.1:16000
+///   远程 IP: 192.168.118.5:16000
+/// CLS-FROM-HOST:
+///   DATA0: 0xA5, 帧头, 固定内容
+///   DATA1: 0xA5, 帧头, 固定内容
+///   DATA2: 0xA5, 帧头, 固定内容
+///   DATA3: 0x01, 设备编号 
+///   DATA4: 0x0E, 数据长度 (14): DATA5~DATA18
+///★  DATA5: 0x00: 正常, 0xAA: 清除故障
+///   DATA6: 0x00, 预留数据位
+///★  DATA7: 0x00: 正常, 0xAA: CLS 复位, 并回到中立位置(零位)
+///   DATA8~DATA18: 0x00, 预留数据位
+///   DATA19: 和校验, 校验和 SUM[data3:data18]
+/// 
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct BT_CLS_FROM_HOST_T {
+    data: [u8;20],
+}
+
+impl Default for BT_CLS_FROM_HOST_T {
+    fn default() -> Self {
+        let mut d = Self {
+            data: [0;20]
+        };
+        d.data[0] = 0xA5;
+        d.data[1] = 0xA5;
+        d.data[2] = 0xA5;
+        d.data[3] = 0x01;
+        d.data[4] = 0x0E;
+
+        d
+    }
+}
+
+impl BT_CLS_FROM_HOST_T {
+    pub fn new() -> Self {
+        BT_CLS_FROM_HOST_T::default()
+    }
+
+    pub fn get_fault(&self) -> i32 {
+        (self.data[5] as u32) as i32
+    }
+    pub fn set_fault(&mut self, v: i32) {
+        self.data[5] = v as u8
+    }
+
+    pub fn get_reset(&self) -> i32 {
+        (self.data[7] as u32) as i32
+    }
+
+    pub fn set_reset(&mut self, v: i32) {
+        self.data[7] = v as u8
+    }
+
+    pub fn get_sum(&self) -> i32 {
+        (self.data[19] as u32) as i32
+    }
+    pub fn set_sum(&mut self, v: i32) {
+        self.data[19] = v as u8
+    }
+}
+
+
 
 /// CLS Model Control Inputs <== Host
 #[repr(C)]
