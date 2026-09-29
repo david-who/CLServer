@@ -1,0 +1,10 @@
+[package]
+name = "cls"     # 包名, 一般与目录一致, 也可以另外的名字
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ecls = { path = "../ecls" }
+ctrlc = "*"
+clap  = { version = "*", features = ["derive"] }
+tokio = { version = "*", features = ["full"] }
