@@ -170,14 +170,17 @@ Type a line in one client; it is relayed (prefixed with `[#id]`) to **both** cli
 ### CLS client
 
 ```bash
-# One-shot: send a line to a UDP endpoint listening on 127.0.0.1:9001
+# One-shot: send a line to a UDP endpoint listening on 127.0.0.1:8080
 echo "ping" | cargo run -p cls-client
 
 # Interactive: keep stdin open to keep sending and see replies
-cargo run -p cls-client 10.0.0.5:8080
+cargo run tc-server -p cls --bin cls -- -a 127.0.0.5 -p 8080
 
 # Test for UDP server
 echo "Hello UDP" | nc -u 127.0.0.1 8080
+
+# Terminate the tcp server
+printf "ECLS:STOP💖" | nc 127.0.0.1 8080
 ```
 
 ## Notes

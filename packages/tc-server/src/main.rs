@@ -181,6 +181,10 @@ struct Args {
     #[arg(value_enum)]
     cmd: CMD,
 
+    /// Print detail out infomation
+    #[arg(short, long)]
+    verbose: bool,
+
     /// Server IP Address
     #[arg(short = 'a', long, default_value = "192.168.118.118")]
     ip_address: IpAddr,
@@ -209,11 +213,17 @@ struct Args {
 
 
 static mut NOW: u64 = 0;
-static mut GLOBAL_BUFFER: [u8; 128] = [0u8; 128];
+static mut G_BUFFER : [u8; 128] = [0u8; 128];
+static mut G_VERBOSE: bool = false;
+fn is_verbose() -> bool {
+    unsafe { G_VERBOSE }
+}
 
 fn recv(buf: &mut[u8], addr: SocketAddr) -> std::io::Result<()> {
     let msg = String::from_utf8_lossy(&buf[..]);
-    println!("📩 Received from {}: {}", addr, msg);
+    if is_verbose() {
+        println!("📩 Received from {}: {}", addr, msg);
+    }
 
     Ok(())
 }
@@ -228,10 +238,10 @@ fn send<'a>() -> Option<&'a[u8]> {
     let payload_len = payload.len();
 
     unsafe {
-        GLOBAL_BUFFER[..payload_len].copy_from_slice(payload);
+        G_BUFFER[..payload_len].copy_from_slice(payload);
     }
 
-    unsafe { Some(&GLOBAL_BUFFER[..payload_len]) }
+    unsafe { Some(&G_BUFFER[..payload_len]) }
 }
 
 #[tokio::main]
@@ -239,6 +249,7 @@ async fn main() -> std::io::Result<()> {
     let _args = Args::parse();
 
     unsafe {
+        G_VERBOSE = _args.verbose;
         NOW = std::time::SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
     }
     ///////////////////////////////////////////////////////////////////////////////

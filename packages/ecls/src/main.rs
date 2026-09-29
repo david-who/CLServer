@@ -29,6 +29,7 @@ async fn handle_tcp_client(mut stream: TcpStream) -> std::io::Result<()> {
                 if n == 0 { // client closed connection
                     break;
                 }
+                println!("Received: {}", String::from_utf8_lossy(&buffer[..n]));
 
                 let response = b"Hello, client!";
                 stream.write_all(response).await.expect("Failed to write");
@@ -77,7 +78,7 @@ async fn main() -> std::io::Result<()> {
     let mut server = Server::new(DEFAULT_SERVER_IPENDPOINT,
             DEFAULT_SERVER_IPENDPOINT, 1);
 
-        // TCP Server
+    // TCP Server
     let handle = tokio::spawn(async move {
             server.start_tcp_server_full(handle_tcp_client).await;
         });
@@ -86,6 +87,13 @@ async fn main() -> std::io::Result<()> {
 /* CTRL+C: */
     while running.load(Ordering::SeqCst) {
         tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
+        if handle.is_finished() { 
+            break;
+        }
+    }
+
+    if !handle.is_finished() {
+        handle.abort(); // cancel task!
     }
 
     match handle.await {

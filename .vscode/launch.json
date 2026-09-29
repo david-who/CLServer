@@ -16,7 +16,10 @@
                     "--package=cls"
                 ]
             },
-            "args": [],
+            "args": [
+                "run",
+                "--verbose",
+            ],
             "cwd": "${workspaceFolder}",
             "stopOnEntry": false,
             "preLaunchTask": "rust: lib build"
