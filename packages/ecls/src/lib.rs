@@ -183,6 +183,11 @@ mod tests {
         } else {
             EcIoShm::create(0).expect("Failed to create share memory")
         };
+        // check if the share memory is valid
+        let buf = ecshm.bytes_as_readonly().expect("can not get cls_in");
+        let bytes  = buf[0..4].try_into().unwrap();
+        let sz = u32::from_ne_bytes(bytes)as usize;
+        assert_eq!(sz, std::mem::size_of::<EcIO_Buffer_T>(), "EcIoSHM size mismatch");
 
         let cin = ecshm.get_ctrl_in(0).expect("can not get cls_in");
         assert_eq!(cin.trav_a, 15.0);

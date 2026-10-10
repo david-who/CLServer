@@ -118,7 +118,9 @@ impl Async for Server {
     F: Fn(UdpSocket) -> Fut + Clone + Send + Sync + 'static,
     Fut: Future<Output = std::io::Result<()>> + Send + 'static
     {
-        let socket = tokio::net::UdpSocket::bind(self.addr_lo).await.expect("Failed to bind UDP socket");
+        let socket = tokio::net::UdpSocket::bind(self.addr_lo).await
+                .expect("Failed to bind UDP socket");
+        #[cfg(debug_assertions)]
         println!("UDP listening on {}", socket.local_addr().unwrap());
 
         let handle = proc.clone();
@@ -133,7 +135,8 @@ impl Async for Server {
     D: Fn() -> Option<&'a[u8]>
     {
         let socket = tokio::net::UdpSocket::bind(self.addr_lo).await
-            .expect(format!("Failed to bind UDP: {}", self.addr_lo).as_str());
+                .expect(format!("Failed to bind UDP: {}", self.addr_lo).as_str());
+        #[cfg(debug_assertions)]
         println!("UDP listening on {}", socket.local_addr().unwrap());
 
         let mut running = true;
@@ -166,7 +169,7 @@ impl Async for Server {
                     }
                 }
                 _ = tokio::signal::ctrl_c() => { // CTRL + C
-                    println!("\n\tShutting down server...");
+                    println!("\n\tShutting down udp server...");
                     break;
                 }
             }

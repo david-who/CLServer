@@ -264,7 +264,7 @@ pub struct EcIO_Buffer_T {
 
     pub cls_in_updated: AtomicBool, // cls_in update flag
     pub cls_in_splock : AtomicU8,   // cls_in spin lock
-    pub cls_in: [U_TcLCS_T; Self::K_SIZE], // 4x17bytes = 68 bytes
+    pub cls_in: [U_TcLCS_T; Self::K_SIZE], // 4x17 *k bytes = 68 bytes
 
     pub cls_out_updated: AtomicBool,
     pub cls_out_splock : AtomicU8,
@@ -302,13 +302,21 @@ impl EcIO_Buffer_T {
 }
 
 #[allow(unused)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EcIoShm {
     mct: u32,   // Lock timeout in counts.
     mfd: RawFd, // Shared memory file descriptor
     msz: usize, // Shared memory size in bytes
     mpbuf: *mut EcIO_Buffer_T,  // Shared memory address
 }
+
+
+// Rust 中裸指针（*const T / *mut T）本身不是 Send 或 Sync，
+// 不能直接跨线程共享，必须用安全的包装类型（如 Arc<Mutex<_>>）
+// 或手动 unsafe impl 来共享
+// Send: 允许安全地跨线程传递所有权，Sync: 允许跨线程共享引用
+unsafe impl Send for EcIoShm {}
+unsafe impl Sync for EcIoShm {}
 
 impl EcIoShm {
     const LOCK_TIME_OUT: u32 = 10;
@@ -388,7 +396,9 @@ impl EcIoShm {
         unsafe {
             let fd = libc::shm_open(
                 Self::SHM_PATH.as_ptr() as *const c_char, //TODO: 字符串必须以 NULL 结尾
-                oflag);
+                oflag,
+                0       // mode: mode_t, 0: Own to original file
+            );
             if fd < 0 {
                 return Err(std::io::Error::last_os_error());
             }
@@ -534,7 +544,7 @@ impl EcIoShm {
     }
 
     #[allow(dead_code)]
-    pub(crate) fn set_ctrl_in(&self, c: &BT_CLSIn_T, idx: usize) -> Result<(), ShmemError>{
+    pub fn set_ctrl_in(&self, c: &BT_CLSIn_T, idx: usize) -> Result<(), ShmemError>{
         if idx > 0 { // now only one channel
             return Err(ShmemError::IndexOverError);
         }

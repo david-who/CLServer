@@ -18,7 +18,9 @@
             },
             "args": [
                 "run",
-                "--verbose",
+                "--ip-local=127.0.0.1",
+                "--ip-host=127.0.0.1",
+                "--hmi-server"
             ],
             "cwd": "${workspaceFolder}",
             "stopOnEntry": false,

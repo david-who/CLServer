@@ -4,8 +4,7 @@ mod error;
 use error::ShmemError; // custom error => Err(ShmemError)
 
 use std::io::Seek;
-use std::fs::File;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::io::{RawFd, AsRawFd};
 use std::sync::atomic::{AtomicBool, AtomicU8};
 use libc::{c_void, off_t, PROT_READ, PROT_WRITE, MAP_FAILED, MAP_SHARED, MS_SYNC};
 
@@ -310,13 +309,22 @@ impl EcPM_Buffer_T {
 
 
 #[allow(unused)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EcPmShm {
     mct: u32,   // Lock timeout in counts.
-    mfd: File,  // Shared memory file descriptor
+    mfd: RawFd, // Shared memory file descriptor
     msz: usize, // Shared memory size in bytes
     mpbuf: *mut EcPM_Buffer_T,  // Shared memory address
 }
+
+
+// Rust 中裸指针（*const T / *mut T）本身不是 Send 或 Sync，
+// 不能直接跨线程共享，必须用安全的包装类型（如 Arc<Mutex<_>>）
+// 或手动 unsafe impl 来共享 
+// Send: 允许安全地跨线程传递所有权，Sync: 允许跨线程共享引用
+unsafe impl Send for EcPmShm {}
+unsafe impl Sync for EcPmShm {}
+
 
 impl EcPmShm {
     const LOCK_TIME_OUT: u32 = 10;
@@ -360,7 +368,7 @@ impl EcPmShm {
 
             Ok(EcPmShm{
                 mct: Self::LOCK_TIME_OUT,
-                mfd: f,
+                mfd: fd,
                 msz: sz,
                 mpbuf: addr as *mut EcPM_Buffer_T,
             })
@@ -401,7 +409,7 @@ impl EcPmShm {
 
             Ok(EcPmShm{
                 mct: Self::LOCK_TIME_OUT,
-                mfd: file,
+                mfd: file.as_raw_fd(),
                 msz: sz as usize,
                 mpbuf: addr as *mut EcPM_Buffer_T,
             })
@@ -738,6 +746,7 @@ impl EcPmShm {
 /// Drop trait for destructor
 impl Drop for EcPmShm {
     fn drop(&mut self) {
+//      println!("EcPmShm is being dropped, closing shared memory.");
         let _ = self.close();
     }
 }
